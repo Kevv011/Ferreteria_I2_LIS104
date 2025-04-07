@@ -1,0 +1,14 @@
+{
+    "require": {
+        "react/http": "^1.11",
+        "react/socket": "^1.16",
+        "react/event-loop": "^1.5",
+        "react/filesystem": "^0.1.2",
+        "react/promise": "^2.11"
+    },
+    "config": {
+        "allow-plugins": {
+            "wyrihaximus/composer-update-bin-autoload-path": true
+        }
+    }
+}
