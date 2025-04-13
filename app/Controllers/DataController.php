@@ -9,20 +9,30 @@ use React\Promise\PromiseInterface;
 
 class DataController
 {
-    private $productModel;
+    private $dataModel;
 
     public function __construct($loop)
     {
-        // Instanciamos el modelo y le pasamos el loop
-        $this->productModel = new DataModel($loop);
+        // Instancia del modelo con loop
+        $this->dataModel = new DataModel($loop);
     }
 
-    // Manejar la solicitud para obtener los productos
-    public function handle(ServerRequestInterface $request, $loop): PromiseInterface
+    // Metodo para manejar la solicitud para obtener los productos
+    public function show(ServerRequestInterface $request, $loop): PromiseInterface
     {
-        return $this->productModel->getAll()->then(
+        $acceptHeader = $request->getHeaderLine('Accept');
+
+        if (str_contains($acceptHeader, 'text/html')) {
+            $html = file_get_contents(__DIR__ . '/../views/products.html');
+            return \React\Promise\resolve(new Response(
+                200,
+                ['Content-Type' => 'text/html'],
+                $html
+            ));
+        }
+
+        return $this->dataModel->getAll()->then(
             function ($result) {
-                // Devolver los resultados como JSON
                 return new Response(
                     200,
                     ['Content-Type' => 'application/json'],
@@ -30,23 +40,87 @@ class DataController
                 );
             },
             function (\Exception $e) {
-                // Manejo de errores
                 return new Response(500, [], 'Error en la consulta');
             }
         );
     }
 
-    // Crear un nuevo producto
+    // Metodo para procesar el ver productos individuales
+    public function viewProduct(ServerRequestInterface $request, $loop): PromiseInterface
+    {
+        // Obtener el ID del producto desde la URL
+        preg_match('/\/productos\/(\d+)/', $request->getUri()->getPath(), $matches);
+        $productId = $matches[1] ?? null;
+
+        $acceptHeader = $request->getHeaderLine('Accept');
+
+        if (str_contains($acceptHeader, 'text/html')) {
+            // Obtener el producto por ID
+            return $this->dataModel->getById($productId)->then(
+                function ($product) {
+                    if ($product) {
+                        // Cargar el HTML
+                        $html = file_get_contents(__DIR__ . '/../views/verProduct.html');
+
+                        // Reemplazar las variables en el HTML con los datos del producto
+                        $html = str_replace('{{nombre}}', $product['nombre'], $html);
+                        $html = str_replace('{{descripcion}}', $product['descripcion'], $html);
+                        $html = str_replace('{{precio}}', $product['precio'], $html);
+                        $html = str_replace('{{stock}}', $product['stock'], $html);
+                        $html = str_replace('{{categoria}}', $product['categoria'], $html);
+
+                        return new Response(
+                            200,
+                            ['Content-Type' => 'text/html'],
+                            $html
+                        );
+                    } else {
+                        return new Response(404, [], 'Producto no encontrado');
+                    }
+                },
+                function (\Exception $e) {
+                    return new Response(500, [], 'Error al obtener el producto');
+                }
+            );
+        }
+
+        return $this->dataModel->getById($productId)->then(
+            function ($product) {
+                if ($product) {
+                    return new Response(
+                        200,
+                        ['Content-Type' => 'application/json'],
+                        json_encode($product)
+                    );
+                } else {
+                    return new Response(404, [], 'Producto no encontrado');
+                }
+            },
+            function (\Exception $e) {
+                return new Response(500, [], 'Error al obtener el producto');
+            }
+        );
+    }
+
+    // Metodo para mostrar el Form de creacion de productos
+    public function createForm(ServerRequestInterface $request)
+    {
+        $html = file_get_contents(__DIR__ . '/../views/addProducts.html');
+        return new Response(200, ['Content-Type' => 'text/html'], $html);
+    }
+
+    // Metodo para rear un nuevo producto
     public function create(ServerRequestInterface $request): PromiseInterface
     {
-        $data = json_decode((string) $request->getBody(), true);
+        $data = $request->getParsedBody(); // Obtener los datos del formulario
 
+        // Validación de los campos
         if (empty($data['nombre']) || empty($data['descripcion']) || empty($data['precio']) || empty($data['stock']) || empty($data['categoria'])) {
-            // Se devuelve una promesa que resuelve un Response con error
             return \React\Promise\resolve(new Response(400, [], 'Faltan datos'));
         }
 
-        return $this->productModel->create(
+        // Insertar el producto en la base de datos
+        return $this->dataModel->create(
             $data['nombre'],
             $data['descripcion'],
             $data['precio'],
@@ -54,7 +128,12 @@ class DataController
             $data['categoria']
         )->then(
             function () {
-                return new Response(201, [], 'Producto creado');
+                // Redireccion a la vista de productos después de agregar el producto
+                return new Response(
+                    303,
+                    ['Location' => '/productos'],
+                    'Producto creado con éxito'
+                );
             },
             function () {
                 return new Response(500, [], 'Error al crear el producto');
@@ -62,7 +141,7 @@ class DataController
         );
     }
 
-    // Actualizar un producto
+    // Metodo para actualizar un producto
     public function update(ServerRequestInterface $request): PromiseInterface
     {
         $path = $request->getUri()->getPath();
@@ -74,7 +153,7 @@ class DataController
             return \React\Promise\resolve(new Response(400, [], 'Faltan datos'));
         }
 
-        return $this->productModel->update(
+        return $this->dataModel->update(
             $productId,
             $data['nombre'],
             $data['descripcion'],
@@ -92,12 +171,13 @@ class DataController
     }
 
     // Eliminar un producto
-    public function delete(ServerRequestInterface $request): PromiseInterface
+    public function deleteProduct(ServerRequestInterface $request): PromiseInterface
     {
-        $path = $request->getUri()->getPath();
-        $productId = basename($path);
+        // Obtener el ID del producto desde la URL
+        $productId = basename($request->getUri()->getPath());
 
-        return $this->productModel->delete($productId)->then(
+        // Eliminar el producto de la base de datos
+        return $this->dataModel->delete($productId)->then(
             function () {
                 return new Response(200, [], 'Producto eliminado');
             },

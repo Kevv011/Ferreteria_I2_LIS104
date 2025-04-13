@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Productos | Ferretería X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/productos.css" />
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container d-flex justify-content-between">
+            <a class="navbar-brand" href="/">Ferretería X</a>
+            <a href="/productos/createForm" class="btn btn-light">+Agregar</a>
+        </div>
+    </nav>
+
+    <header class="bg-warning py-5 text-white text-center">
+        <div class="container">
+            <h1 class="display-4">Nuestros Productos</h1>
+            <p class="lead">Descubre la variedad que tenemos para ti</p>
+        </div>
+    </header>
+
+    <main class="py-5 bg-light">
+        <div class="container">
+            <div class="row" id="productos-container">
+                <!-- Aquí se insertan los productos -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de confirmación de eliminación -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Estás seguro de que deseas eliminar este producto?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3">
+        <div class="container">
+            &copy; Ferretería X. Todos los derechos reservados.
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Consumir datos de productos
+        fetch('/productos')
+            .then(response => response.json())
+            .then(data => {
+                const productos = data.resultRows;
+                const container = document.getElementById('productos-container');
+
+                if (productos.length === 0) {
+                    container.innerHTML = '<div class="col-12 text-center"><p class="text-muted">No hay productos disponibles.</p></div>';
+                    return;
+                }
+
+                productos.forEach(producto => {
+                    const card = document.createElement('div');
+                    card.className = 'col-md-4 mb-4';
+
+                    card.innerHTML = `
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">${producto.nombre}</h5>
+                                <p class="card-text">${producto.descripcion}</p>
+                                <ul class="list-group list-group-flush mb-3">
+                                    <li class="list-group-item"><strong>Precio:</strong> $${parseFloat(producto.precio).toFixed(2)}</li>
+                                    <li class="list-group-item"><strong>Stock:</strong> ${producto.stock}</li>
+                                    <li class="list-group-item"><strong>Categoría:</strong> ${producto.categoria}</li>
+                                </ul>
+                                <p class="text-muted small">Publicado: ${new Date(producto.creado_en).toLocaleDateString()}</p>
+                                <div class="d-flex justify-content-between">
+                                    <a href="/productos/${producto.id}" class="btn btn-primary">Ver</a>
+                                    <button class="btn btn-danger btn-eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="${producto.id}">Eliminar</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                // Reasignar eventos una vez generado el DOM
+                const deleteButtons = document.querySelectorAll('.btn-eliminar');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', function () {
+                        const productId = this.getAttribute('data-id');
+                        const confirmDeleteButton = document.getElementById('confirmDeleteBtn');
+                        confirmDeleteButton.setAttribute('data-id', productId);
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error al obtener los productos:', error);
+                document.getElementById('productos-container').innerHTML = '<p class="text-danger">Error al cargar productos.</p>';
+            });
+
+        // Confirmar eliminación
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+            const productId = this.getAttribute('data-id');
+            fetch(`/productos/${productId}/delete`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        // Cierra el modal antes de recargar
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                        modal.hide();
+                        // Recargar después de una pequeña espera para cerrar el modal
+                        setTimeout(() => window.location.reload(), 300);
+                    } else {
+                        alert('Error al eliminar el producto');
+                    }
+                });
+        });
+    </script>
+</body>
+
+</html>

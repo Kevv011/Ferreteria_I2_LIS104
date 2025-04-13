@@ -61,7 +61,7 @@ $server = new HttpServer(function (ServerRequestInterface $request) use ($routes
     if (isset($routes[$path])) {
         try {
             [$controllerClass, $method] = $routes[$path];
-            $controller = new $controllerClass();
+            $controller = new $controllerClass($loop);
             return $controller->$method($request, $loop);
         } catch (\Throwable $e) {
             // Mostrar error como respuesta HTTP

@@ -43,4 +43,18 @@ class DataModel
         $query = 'DELETE FROM productos WHERE id = ?';
         return $this->db->query($query, [$id]);
     }
+
+    // Obtiene un producto por ID
+    public function getById($id)
+    {
+        $query = 'SELECT * FROM productos WHERE id = ?';
+        return $this->db->query($query, [$id])->then(
+            function ($result) {
+                if (empty($result)) {
+                    return null; 
+                }
+                return $result[0];
+            }
+        );
+    }
 }
