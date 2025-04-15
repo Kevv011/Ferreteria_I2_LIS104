@@ -17,24 +17,38 @@
     </nav>
 
     <div class="container py-5">
-        <h2 class="text-center">Producto: {{nombre}}</h2>
-        <div class="row">
-            <div class="col-md-6">
-                <h5>Descripción:</h5>
-                <p>{{descripcion}}</p>
-            </div>
-            <div class="col-md-6">
-                <h5>Precio:</h5>
-                <p>${{precio}}</p>
-                <h5>Stock:</h5>
-                <p>{{stock}}</p>
-                <h5>Categoría:</h5>
-                <p>{{categoria}}</p>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow rounded">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Producto: {{nombre}}</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Descripción</h5>
+                        <p class="card-text">{{descripcion}}</p>
+
+                        <hr />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Precio:</h6>
+                                <p>${{precio}}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Stock:</h6>
+                                <p>{{stock}}</p>
+                            </div>
+                        </div>
+
+                        <h6>Categoría:</h6>
+                        <p>{{categoria}}</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <footer class="bg-dark text-white text-center py-3">
+    <footer class="bg-dark text-white text-center py-3 mt-5">
         <div class="container">
             &copy; Ferretería X. Todos los derechos reservados.
         </div>

@@ -46,57 +46,28 @@ class DataController
     }
 
     // Metodo para procesar el ver productos individuales
-    public function viewProduct(ServerRequestInterface $request, $loop): PromiseInterface
+    public function viewProduct(ServerRequestInterface $request, $loop, $id)
     {
-        // Obtener el ID del producto desde la URL
-        preg_match('/\/productos\/(\d+)/', $request->getUri()->getPath(), $matches);
-        $productId = $matches[1] ?? null;
+        //Error log para ver el ID de un producto en consola y saber que se pasa correctamente 
+        error_log("ID recibido en viewProduct: " . var_export($id, true));
 
-        $acceptHeader = $request->getHeaderLine('Accept');
-
-        if (str_contains($acceptHeader, 'text/html')) {
-            // Obtener el producto por ID
-            return $this->dataModel->getById($productId)->then(
-                function ($product) {
-                    if ($product) {
-                        // Cargar el HTML
-                        $html = file_get_contents(__DIR__ . '/../views/verProduct.html');
-
-                        // Reemplazar las variables en el HTML con los datos del producto
-                        $html = str_replace('{{nombre}}', $product['nombre'], $html);
-                        $html = str_replace('{{descripcion}}', $product['descripcion'], $html);
-                        $html = str_replace('{{precio}}', $product['precio'], $html);
-                        $html = str_replace('{{stock}}', $product['stock'], $html);
-                        $html = str_replace('{{categoria}}', $product['categoria'], $html);
-
-                        return new Response(
-                            200,
-                            ['Content-Type' => 'text/html'],
-                            $html
-                        );
-                    } else {
-                        return new Response(404, [], 'Producto no encontrado');
-                    }
-                },
-                function (\Exception $e) {
-                    return new Response(500, [], 'Error al obtener el producto');
-                }
-            );
-        }
-
-        return $this->dataModel->getById($productId)->then(
+        return $this->dataModel->getById($id)->then(
             function ($product) {
                 if ($product) {
-                    return new Response(
-                        200,
-                        ['Content-Type' => 'application/json'],
-                        json_encode($product)
-                    );
+                    $html = file_get_contents(__DIR__ . '/../views/verProduct.html');
+                    $html = str_replace('{{nombre}}', $product['nombre'], $html);
+                    $html = str_replace('{{descripcion}}', $product['descripcion'], $html);
+                    $html = str_replace('{{precio}}', $product['precio'], $html);
+                    $html = str_replace('{{stock}}', $product['stock'], $html);
+                    $html = str_replace('{{categoria}}', $product['categoria'], $html);
+                    return new Response(200, ['Content-Type' => 'text/html'], $html);
                 } else {
                     return new Response(404, [], 'Producto no encontrado');
                 }
             },
             function (\Exception $e) {
+                error_log($e->getMessage());
+                error_log($e->getTraceAsString());
                 return new Response(500, [], 'Error al obtener el producto');
             }
         );
@@ -176,13 +147,25 @@ class DataController
         // Obtener el ID del producto desde la URL
         $productId = basename($request->getUri()->getPath());
 
-        // Eliminar el producto de la base de datos
-        return $this->dataModel->delete($productId)->then(
-            function () {
-                return new Response(200, [], 'Producto eliminado');
+        // Verificar si el producto existe
+        return $this->dataModel->getById($productId)->then(
+            function ($product) use ($productId) {
+
+                if ($product) {
+                    return $this->dataModel->delete($productId)->then(
+                        function () {
+                            return new Response(200, [], 'Producto eliminado');
+                        },
+                        function () {
+                            return new Response(500, [], 'Error al eliminar el producto');
+                        }
+                    );
+                } else {
+                    return new Response(404, [], 'Producto no encontrado');
+                }
             },
             function () {
-                return new Response(500, [], 'Error al eliminar el producto');
+                return new Response(500, [], 'Error al verificar la existencia del producto');
             }
         );
     }

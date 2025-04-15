@@ -45,7 +45,11 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
+                    <!-- Formulario de eliminación -->
+                    <form id="deleteForm" method="POST" action="">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -76,23 +80,23 @@
                     card.className = 'col-md-4 mb-4';
 
                     card.innerHTML = `
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body">
-                                <h5 class="card-title">${producto.nombre}</h5>
-                                <p class="card-text">${producto.descripcion}</p>
-                                <ul class="list-group list-group-flush mb-3">
-                                    <li class="list-group-item"><strong>Precio:</strong> $${parseFloat(producto.precio).toFixed(2)}</li>
-                                    <li class="list-group-item"><strong>Stock:</strong> ${producto.stock}</li>
-                                    <li class="list-group-item"><strong>Categoría:</strong> ${producto.categoria}</li>
-                                </ul>
-                                <p class="text-muted small">Publicado: ${new Date(producto.creado_en).toLocaleDateString()}</p>
-                                <div class="d-flex justify-content-between">
-                                    <a href="/productos/${producto.id}" class="btn btn-primary">Ver</a>
-                                    <button class="btn btn-danger btn-eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="${producto.id}">Eliminar</button>
-                                </div>
-                            </div>
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">${producto.nombre}</h5>
+                        <p class="card-text">${producto.descripcion}</p>
+                        <ul class="list-group list-group-flush mb-3">
+                            <li class="list-group-item"><strong>Precio:</strong> $${parseFloat(producto.precio).toFixed(2)}</li>
+                            <li class="list-group-item"><strong>Stock:</strong> ${producto.stock}</li>
+                            <li class="list-group-item"><strong>Categoría:</strong> ${producto.categoria}</li>
+                        </ul>
+                        <p class="text-muted small">Publicado: ${new Date(producto.creado_en).toLocaleDateString()}</p>
+                        <div class="d-flex justify-content-between">
+                            <a href="/productos/${producto.id}" class="btn btn-primary">Ver</a>
+                            <button class="btn btn-danger btn-eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="${producto.id}">Eliminar</button>
                         </div>
-                    `;
+                    </div>
+                </div>
+            `;
                     container.appendChild(card);
                 });
 
@@ -102,7 +106,8 @@
                     button.addEventListener('click', function () {
                         const productId = this.getAttribute('data-id');
                         const confirmDeleteButton = document.getElementById('confirmDeleteBtn');
-                        confirmDeleteButton.setAttribute('data-id', productId);
+                        const deleteForm = document.getElementById('deleteForm');
+                        deleteForm.action = `/productos/${productId}/delete`; // Actualizar la URL del formulario
                     });
                 });
             })
@@ -110,25 +115,6 @@
                 console.error('Error al obtener los productos:', error);
                 document.getElementById('productos-container').innerHTML = '<p class="text-danger">Error al cargar productos.</p>';
             });
-
-        // Confirmar eliminación
-        document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
-            const productId = this.getAttribute('data-id');
-            fetch(`/productos/${productId}/delete`, {
-                method: 'DELETE'
-            })
-                .then(response => {
-                    if (response.ok) {
-                        // Cierra el modal antes de recargar
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
-                        modal.hide();
-                        // Recargar después de una pequeña espera para cerrar el modal
-                        setTimeout(() => window.location.reload(), 300);
-                    } else {
-                        alert('Error al eliminar el producto');
-                    }
-                });
-        });
     </script>
 </body>
 

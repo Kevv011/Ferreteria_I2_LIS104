@@ -5,6 +5,8 @@ namespace App\Models;
 use Config\Database;
 use React\EventLoop\LoopInterface;
 use React\MySQL\ConnectionInterface;
+use React\MySQL\QueryResult;
+use React\Promise\PromiseInterface;
 
 class DataModel
 {
@@ -38,23 +40,30 @@ class DataModel
     }
 
     // Eliminar un producto
-    public function delete($id)
+    public function delete($id): PromiseInterface
     {
         $query = 'DELETE FROM productos WHERE id = ?';
-        return $this->db->query($query, [$id]);
+
+        // Retornar una promesa que se resuelve cuando la consulta se haya completado
+        return $this->db->query($query, [$id])->then(
+            function ($result) {
+                return $result;
+            },
+            function ($error) {
+                throw new \Exception('Error al eliminar el producto: ' . $error->getMessage());
+            }
+        );
     }
 
     // Obtiene un producto por ID
     public function getById($id)
     {
-        $query = 'SELECT * FROM productos WHERE id = ?';
-        return $this->db->query($query, [$id])->then(
-            function ($result) {
-                if (empty($result)) {
-                    return null; 
-                }
-                return $result[0];
+        $sql = "SELECT * FROM productos WHERE id = ?";
+        return $this->db->query($sql, [$id])->then(function (QueryResult $result) {
+            if (!empty($result->resultRows)) {
+                return $result->resultRows[0];
             }
-        );
+            return null;
+        });
     }
 }
