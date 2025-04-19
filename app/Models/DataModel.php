@@ -58,8 +58,8 @@ class DataModel
     // Obtiene un producto por ID
     public function getById($id)
     {
-        $sql = "SELECT * FROM productos WHERE id = ?";
-        return $this->db->query($sql, [$id])->then(function (QueryResult $result) {
+        $query = "SELECT * FROM productos WHERE id = ?";
+        return $this->db->query($query, [$id])->then(function (QueryResult $result) {
             if (!empty($result->resultRows)) {
                 return $result->resultRows[0];
             }

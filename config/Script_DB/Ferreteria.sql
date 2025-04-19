@@ -19,3 +19,4 @@ INSERT INTO productos (nombre, descripcion, precio, stock, categoria) VALUES
 ('Martillo de goma', 'Martillo con cabezal de goma ideal para trabajos delicados.', 9.99, 80, 'Herramientas manuales'),
 ('Caja de herramientas completa', 'Caja de herramientas con 100 piezas, incluyendo destornilladores, llaves, etc.', 59.99, 25, 'Accesorios');
 
+SELECT * FROM productos;

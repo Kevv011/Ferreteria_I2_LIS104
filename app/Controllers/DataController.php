@@ -55,6 +55,7 @@ class DataController
             function ($product) {
                 if ($product) {
                     $html = file_get_contents(__DIR__ . '/../views/verProduct.html');
+                    $html = str_replace('{{id}}', $product['id'], $html);
                     $html = str_replace('{{nombre}}', $product['nombre'], $html);
                     $html = str_replace('{{descripcion}}', $product['descripcion'], $html);
                     $html = str_replace('{{precio}}', $product['precio'], $html);
@@ -112,61 +113,61 @@ class DataController
         );
     }
 
-    // Metodo para actualizar un producto
     public function update(ServerRequestInterface $request): PromiseInterface
     {
-        $path = $request->getUri()->getPath();
-        $productId = basename($path);
+        parse_str((string) $request->getBody(), $data);
 
-        $data = json_decode((string) $request->getBody(), true);
-
-        if (empty($data['nombre']) || empty($data['descripcion']) || empty($data['precio']) || empty($data['stock']) || empty($data['categoria'])) {
-            return \React\Promise\resolve(new Response(400, [], 'Faltan datos'));
+        // Si faltan datos, se redirecciona igualmente (En caso de solo editar ciertos campos)
+        if (
+            empty($data['id']) ||
+            empty($data['nombre']) ||
+            empty($data['descripcion']) ||
+            empty($data['precio']) ||
+            empty($data['stock']) ||
+            empty($data['categoria'])
+        ) {
+            return \React\Promise\resolve(
+                new Response(
+                    302,
+                    ['Location' => "/productos/{$data['id']}"]
+                )
+            );
         }
 
         return $this->dataModel->update(
-            $productId,
+            $data['id'],
             $data['nombre'],
             $data['descripcion'],
             $data['precio'],
             $data['stock'],
             $data['categoria']
         )->then(
-            function () {
-                return new Response(200, [], 'Producto actualizado');
-            },
-            function () {
-                return new Response(500, [], 'Error al actualizar el producto');
-            }
+            fn() => new Response(
+                302,
+                ['Location' => "/productos/{$data['id']}"]
+            ),
+            fn() => new Response(
+                302,
+                ['Location' => "/productos/{$data['id']}"]
+            )
         );
     }
 
     // Eliminar un producto
-    public function deleteProduct(ServerRequestInterface $request): PromiseInterface
+    public function delete(ServerRequestInterface $request, $loop, $productId): PromiseInterface
     {
-        // Obtener el ID del producto desde la URL
-        $productId = basename($request->getUri()->getPath());
-
-        // Verificar si el producto existe
         return $this->dataModel->getById($productId)->then(
             function ($product) use ($productId) {
-
                 if ($product) {
                     return $this->dataModel->delete($productId)->then(
-                        function () {
-                            return new Response(200, [], 'Producto eliminado');
-                        },
-                        function () {
-                            return new Response(500, [], 'Error al eliminar el producto');
-                        }
+                        fn() => new Response(200, [], 'Producto eliminado'),
+                        fn() => new Response(500, [], 'Error al eliminar el producto')
                     );
                 } else {
                     return new Response(404, [], 'Producto no encontrado');
                 }
             },
-            function () {
-                return new Response(500, [], 'Error al verificar la existencia del producto');
-            }
+            fn() => new Response(500, [], 'Error al verificar la existencia del producto')
         );
     }
 }

@@ -32,29 +32,6 @@
         </div>
     </main>
 
-    <!-- Modal de confirmación de eliminación -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    ¿Estás seguro de que deseas eliminar este producto?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <!-- Formulario de eliminación -->
-                    <form id="deleteForm" method="POST" action="">
-                        <input type="hidden" name="_method" value="DELETE">
-                        <button type="submit" class="btn btn-danger">Eliminar</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <footer class="bg-dark text-white text-center py-3">
         <div class="container">
             &copy; Ferretería X. Todos los derechos reservados.
@@ -92,23 +69,11 @@
                         <p class="text-muted small">Publicado: ${new Date(producto.creado_en).toLocaleDateString()}</p>
                         <div class="d-flex justify-content-between">
                             <a href="/productos/${producto.id}" class="btn btn-primary">Ver</a>
-                            <button class="btn btn-danger btn-eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="${producto.id}">Eliminar</button>
                         </div>
                     </div>
                 </div>
             `;
                     container.appendChild(card);
-                });
-
-                // Reasignar eventos una vez generado el DOM
-                const deleteButtons = document.querySelectorAll('.btn-eliminar');
-                deleteButtons.forEach(button => {
-                    button.addEventListener('click', function () {
-                        const productId = this.getAttribute('data-id');
-                        const confirmDeleteButton = document.getElementById('confirmDeleteBtn');
-                        const deleteForm = document.getElementById('deleteForm');
-                        deleteForm.action = `/productos/${productId}/delete`; // Actualizar la URL del formulario
-                    });
                 });
             })
             .catch(error => {

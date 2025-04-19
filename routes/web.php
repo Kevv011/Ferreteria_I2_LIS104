@@ -12,9 +12,7 @@ return [
     ],
     'POST' => [
         '/productos/create' => [DataController::class, 'create'],
-    ],
-    'PUT' => [
-        '/productos/{id}/update' => [DataController::class, 'update'],
+        '/productos/update' => [DataController::class, 'update'],
     ],
     'DELETE' => [
         '/productos/{id}/delete' => [DataController::class, 'delete'],
