@@ -25,7 +25,7 @@ $server = new HttpServer(function (ServerRequestInterface $request) use ($routes
     $path = $request->getUri()->getPath();
 
     // === SERVIR ARCHIVOS ESTÁTICOS ===
-    $publicPath = __DIR__ . '/public'; // Ajusta si tus archivos están en otra carpeta
+    $publicPath = __DIR__ . '/public'; 
     $filePath = realpath($publicPath . $path);
 
     // Evita acceder fuera del directorio público
