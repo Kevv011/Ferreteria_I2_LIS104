@@ -8,7 +8,7 @@ use React\MySQL\ConnectionInterface;
 
 class Database
 {
-    private static ?ConnectionInterface $connection = null;
+    private static ? ConnectionInterface $connection = null;
 
     public static function getConnection(LoopInterface $loop): ConnectionInterface
     {
@@ -17,7 +17,7 @@ class Database
 
             // Credenciales de conexion
             self::$connection = $factory->createLazyConnection(
-                'mysql://root@127.0.0.1:3307/ferreteria'
+                'mysql://root@127.0.0.1:3306/ferreteria'
             );
         }
 
